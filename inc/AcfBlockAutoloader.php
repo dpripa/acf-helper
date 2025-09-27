@@ -4,7 +4,6 @@ namespace OmgAcfHelper;
 use DirectoryIterator;
 use Exception;
 use OmgCore\OmgFeature;
-use OmgCore\Fs;
 use OmgCore\Helper\DashToCamelcase;
 
 defined( 'ABSPATH' ) || exit;
@@ -12,27 +11,9 @@ defined( 'ABSPATH' ) || exit;
 class AcfBlockAutoloader extends OmgFeature {
 	use DashToCamelcase;
 
-	protected string $key;
-	protected Fs $fs;
 	protected string $template_dir    = 'acf-block';
 	protected string $field_namespace = 'AcfBlock';
 	protected array $block_fields     = array();
-
-	/**
-	 * AcfBlockAutoloader constructor.
-	 *
-	 * @param string $key The key for the App.
-	 * @param Fs $fs The filesystem instance.
-	 * @param callable $get_config Configuration options.
-	 *
-	 * @throws Exception
-	 */
-	public function __construct( string $key, Fs $fs, ?callable $get_config = null ) {
-		parent::__construct( $get_config );
-
-		$this->key = $key;
-		$this->fs  = $fs;
-	}
 
 	/**
 	 * Register a block type with ACF and WordPress.
@@ -68,7 +49,7 @@ class AcfBlockAutoloader extends OmgFeature {
 				return array_merge(
 					array(
 						array(
-							'slug'  => $this->key . "_$post_type",
+							'slug'  => $this->app->get_key( $post_type ),
 							'title' => $title,
 						),
 					),
@@ -86,7 +67,7 @@ class AcfBlockAutoloader extends OmgFeature {
 			'acf/init',
 			function () use ( $post_type, $field_namespace ): void {
 				$path = "$this->template_dir/$post_type";
-				$dir  = $this->fs->get_path( $path );
+				$dir  = $this->app->fs()->get_path( $path );
 
 				if ( ! file_exists( $dir ) ) {
 					throw new Exception( esc_html( "The $dir directory does not exist" ) );
@@ -124,7 +105,7 @@ class AcfBlockAutoloader extends OmgFeature {
 							'name'            => $slug,
 							'title'           => __( $file_headers['name'], 'starter-theme' ), // phpcs:ignore
 							'description'     => __( $file_headers['description'], 'starter-theme' ), // phpcs:ignore
-							'category'        => $this->key . "_$post_type",
+							'category'        => $this->app->get_key( $post_type ),
 							'icon'            => $file_headers['icon'],
 							'keywords'        => explode( ', ', $file_headers['keywords'] ),
 							'post_types'      => array( $post_type ),
@@ -134,7 +115,7 @@ class AcfBlockAutoloader extends OmgFeature {
 								'align' => false,
 							),
 							'render_callback' => function ( array &$args ) use ( $path, $slug ) { // phpcs:ignore
-								require_once $this->fs->get_path( "$path/$slug.php" );
+								require_once $this->app->fs()->get_path( "$path/$slug.php" );
 							},
 						)
 					);
