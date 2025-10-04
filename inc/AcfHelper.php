@@ -2,20 +2,25 @@
 
 namespace OmgAcfHelper;
 
-use OmgCore\OmgFeature;
-use OmgCore\OmgApp;
+use OmgCore\Dependency;
+use OmgCore\Feature;
 
 defined( 'ABSPATH' ) || exit;
 
-class AcfHelper extends OmgFeature {
-	public function __construct( OmgApp $app ) {
-		parent::__construct( $app );
+class AcfHelper extends Feature {
+	protected Dependency $dependency;
+
+	public function __construct( Dependency $dependency ) {
+		parent::__construct();
+
+		$this->dependency = $dependency;
+
 		add_action( 'init', $this->init() );
 	}
 
 	protected function init(): callable {
 		return function () {
-			$this->app->dependency()->require_plugin(
+			$this->dependency->require_plugin(
 				'acf_pro',
 				'Advanced Custom Fields Pro',
 				'advanced-custom-fields-pro/acf.php'
