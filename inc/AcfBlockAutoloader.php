@@ -18,7 +18,7 @@ class AcfBlockAutoloader extends Feature {
 	protected string $field_namespace = 'AcfBlock';
 	protected array $block_fields     = array();
 
-	public function __construct( string $key, Fs $fs, callable $get_config ) {
+	public function __construct( string $key, Fs $fs, ?callable $get_config = null ) {
 		parent::__construct( $get_config );
 
 		$this->key = $key;
@@ -109,7 +109,7 @@ class AcfBlockAutoloader extends Feature {
 					$file_headers['icon']        = $file_headers['icon'] ?? '';
 					$file_headers['keywords']    = $file_headers['icon'] ?? '';
 
-					$this->register_block_fields( $slug, $field_namespace );
+					$this->register_block_fields( $slug, $field_namespace, $post_type );
 					acf_register_block_type(
 						array(
 							'name'            => $slug,
@@ -137,7 +137,11 @@ class AcfBlockAutoloader extends Feature {
 	/**
 	 * @throws Exception
 	 */
-	protected function register_block_fields( string $slug, string $field_namespace_prefix ): void {
+	protected function register_block_fields(
+		string $slug,
+		string $field_namespace_prefix,
+		string $post_type
+	): void {
 		$classname = $field_namespace_prefix . '\\' . $this->field_namespace . '\\' . $this->dash_to_camelcase( $slug, true );
 
 		if ( ! class_exists( $classname ) ) {
@@ -148,6 +152,6 @@ class AcfBlockAutoloader extends Feature {
 			throw new Exception( esc_html( "The $classname class must extend OmgAcfHelper\AcfBlockField" ) );
 		}
 
-		$this->block_fields[] = new $classname();
+		$this->block_fields[] = new $classname( $post_type );
 	}
 }
